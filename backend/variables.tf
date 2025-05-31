@@ -1,4 +1,4 @@
 variable "key_name" {
-  description = "SSH key name"
+  description = "project3"
   type        = string
 }

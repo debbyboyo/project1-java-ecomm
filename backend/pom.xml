@@ -6,14 +6,18 @@
     <groupId>com.cyat</groupId>
     <artifactId>ecommerce</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
 
-    <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.1.5</version>
-    </parent>
+    <name>ecommerce</name>
+    <description>Simple Spring Boot E-Commerce Backend</description>
+
+    <properties>
+        <java.version>17</java.version>
+        <spring.boot.version>3.1.5</spring.boot.version>
+    </properties>
 
     <dependencies>
+        <!-- Spring Boot Starter Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>

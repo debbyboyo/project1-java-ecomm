@@ -63,7 +63,7 @@ resource "aws_instance" "workstation" {
   instance_type          = "t2.medium"
   subnet_id              = aws_subnet.public[0].id
   associate_public_ip_address = true
-  key_name               = project3
+  key_name               = var.key_name
   vpc_security_group_ids = [aws_security_group.allow_ssh.id]
   tags = {
     Name = "workstation"
@@ -74,7 +74,7 @@ resource "aws_instance" "master" {
   ami                    = "ami-0c2b8ca1dad447f8a"
   instance_type          = "t2.medium"
   subnet_id              = aws_subnet.private[0].id
-  key_name               = project3
+  key_name               = var.key_name
   vpc_security_group_ids = [aws_security_group.allow_ssh.id]
   tags = {
     Name = "master"
@@ -86,7 +86,7 @@ resource "aws_instance" "worker" {
   ami                    = "ami-0c2b8ca1dad447f8a"
   instance_type          = "t2.medium"
   subnet_id              = aws_subnet.private[count.index].id
-  key_name               = project3
+  key_name               = var.key_name
   vpc_security_group_ids = [aws_security_group.allow_ssh.id]
   tags = {
     Name = "worker-${count.index + 1}"

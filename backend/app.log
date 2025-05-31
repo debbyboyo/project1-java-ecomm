@@ -1,0 +1,22 @@
+nohup: ignoring input
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.1.5)
+
+2025-05-31T18:52:04.812Z  INFO 2539 --- [           main] com.cyat.ecommerce.Main                  : Starting Main using Java 17.0.15 with PID 2539 (/home/ec2-user/project1-java-ecomm/backend/target/ecommerce-1.0-SNAPSHOT.jar started by ec2-user in /home/ec2-user/project1-java-ecomm/backend)
+2025-05-31T18:52:04.819Z  INFO 2539 --- [           main] com.cyat.ecommerce.Main                  : No active profile set, falling back to 1 default profile: "default"
+2025-05-31T18:52:06.888Z  INFO 2539 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8080 (http)
+2025-05-31T18:52:06.916Z  INFO 2539 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-05-31T18:52:06.916Z  INFO 2539 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.15]
+2025-05-31T18:52:07.193Z  INFO 2539 --- [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-05-31T18:52:07.194Z  INFO 2539 --- [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 2239 ms
+2025-05-31T18:52:08.446Z  INFO 2539 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
+2025-05-31T18:52:08.495Z  INFO 2539 --- [           main] com.cyat.ecommerce.Main                  : Started Main in 4.535 seconds (process running for 5.457)
+2025-05-31T18:52:13.427Z  INFO 2539 --- [nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-05-31T18:52:13.428Z  INFO 2539 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-05-31T18:52:13.430Z  INFO 2539 --- [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms

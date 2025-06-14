@@ -1,71 +1,80 @@
-resource "aws_vpc" "main" {
+provider "aws" {
+  region = var.region
+}
+
+# --- VPC ---
+resource "aws_vpc" "eks_vpc" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
   enable_dns_hostnames = true
   tags = {
-    Name = "project1-vpc"
+    Name = "eks-vpc"
   }
 }
 
-resource "aws_subnet" "public_subnet_1" {
-  vpc_id                  = aws_vpc.main.id
+# --- Internet Gateway ---
+resource "aws_internet_gateway" "gw" {
+  vpc_id = aws_vpc.eks_vpc.id
+  tags = {
+    Name = "eks-gateway"
+  }
+}
+
+# --- Public Subnets ---
+resource "aws_subnet" "public_subnet_a" {
+  vpc_id                  = aws_vpc.eks_vpc.id
   cidr_block              = "10.0.1.0/24"
-  availability_zone       = "us-east-1a"
+  availability_zone       = "us-east-2a"
   map_public_ip_on_launch = true
-  tags = {
-    Name = "public-subnet-1"
-  }
+  tags = { Name = "public-a" }
 }
 
-resource "aws_subnet" "private_subnet_1" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = "us-east-1a"
-  tags = {
-    Name = "private-subnet-1"
-  }
+resource "aws_subnet" "public_subnet_b" {
+  vpc_id                  = aws_vpc.eks_vpc.id
+  cidr_block              = "10.0.2.0/24"
+  availability_zone       = "us-east-2b"
+  map_public_ip_on_launch = true
+  tags = { Name = "public-b" }
 }
 
-resource "aws_subnet" "private_subnet_2" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.3.0/24"
-  availability_zone = "us-east-1b"
-  tags = {
-    Name = "private-subnet-2"
-  }
-}
-
-resource "aws_internet_gateway" "igw" {
-  vpc_id = aws_vpc.main.id
-  tags = {
-    Name = "project1-igw"
-  }
-}
-
+# --- Route Table ---
 resource "aws_route_table" "public_rt" {
-  vpc_id = aws_vpc.main.id
+  vpc_id = aws_vpc.eks_vpc.id
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.igw.id
+    gateway_id = aws_internet_gateway.gw.id
   }
-  tags = {
-    Name = "public-rt"
-  }
+  tags = { Name = "eks-public-rt" }
 }
 
-resource "aws_route_table_association" "public_assoc" {
-  subnet_id      = aws_subnet.public_subnet_1.id
+resource "aws_route_table_association" "a" {
+  subnet_id      = aws_subnet.public_subnet_a.id
   route_table_id = aws_route_table.public_rt.id
 }
 
-resource "aws_security_group" "ssh" {
-  name        = "allow_ssh"
-  description = "Allow SSH inbound traffic"
-  vpc_id      = aws_vpc.main.id
+resource "aws_route_table_association" "b" {
+  subnet_id      = aws_subnet.public_subnet_b.id
+  route_table_id = aws_route_table.public_rt.id
+}
+
+# --- Security Group ---
+resource "aws_security_group" "eks_sg" {
+  name        = "eks-sg"
+  description = "Allow SSH and Kubernetes access"
+  vpc_id      = aws_vpc.eks_vpc.id
 
   ingress {
+    description = "SSH"
     from_port   = 22
     to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "K8s API"
+    from_port   = 443
+    to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -76,43 +85,46 @@ resource "aws_security_group" "ssh" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-}
 
-# Kubernetes Master (in public subnet for SSH)
-resource "aws_instance" "k8s_master" {
-  ami                         = var.instance_ami
-  instance_type               = var.instance_type
-  key_name                    = var.key_name
-  subnet_id                   = aws_subnet.public_subnet_1.id
-  associate_public_ip_address = true
-  vpc_security_group_ids      = [aws_security_group.ssh.id]
   tags = {
-    Name = "k8s-master"
+    Name = "eks-security-group"
   }
 }
 
-# Kubernetes Worker 1 (private)
-resource "aws_instance" "k8s_worker_1" {
-  ami                         = var.instance_ami
-  instance_type               = var.instance_type
-  key_name                    = var.key_name
-  subnet_id                   = aws_subnet.private_subnet_1.id
-  associate_public_ip_address = false
-  vpc_security_group_ids      = [aws_security_group.ssh.id]
-  tags = {
-    Name = "k8s-worker-1"
-  }
+# --- IAM Role for EKS Cluster ---
+resource "aws_iam_role" "eks_cluster_role" {
+  name = "eksClusterRole"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect = "Allow",
+      Principal = {
+        Service = "eks.amazonaws.com"
+      },
+      Action = "sts:AssumeRole"
+    }]
+  })
 }
 
-# Kubernetes Worker 2 (private)
-resource "aws_instance" "k8s_worker_2" {
-  ami                         = var.instance_ami
-  instance_type               = var.instance_type
-  key_name                    = var.key_name
-  subnet_id                   = aws_subnet.private_subnet_2.id
-  associate_public_ip_address = false
-  vpc_security_group_ids      = [aws_security_group.ssh.id]
-  tags = {
-    Name = "k8s-worker-2"
+resource "aws_iam_role_policy_attachment" "eks_cluster_AmazonEKSClusterPolicy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+  role       = aws_iam_role.eks_cluster_role.name
+}
+
+# --- EKS Cluster ---
+resource "aws_eks_cluster" "eks" {
+  name     = "spring-eks-cluster"
+  role_arn = aws_iam_role.eks_cluster_role.arn
+
+  vpc_config {
+    subnet_ids = [
+      aws_subnet.public_subnet_a.id,
+      aws_subnet.public_subnet_b.id,
+    ]
+    endpoint_public_access = true
   }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.eks_cluster_AmazonEKSClusterPolicy
+  ]
 }
